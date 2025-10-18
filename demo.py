@@ -1,233 +1,135 @@
 #!/usr/bin/env python3
 """
-Demo script for AI Compliance Copilot
-Uploads a sample PDF and demonstrates the analysis workflow
+AI Compliance Copilot Demo Script
+Demonstrates the MCP integration and compliance analysis capabilities.
 """
 
-import requests
+import asyncio
 import json
-import time
 import os
+import sys
 from pathlib import Path
 
-# Configuration
-BACKEND_URL = "http://localhost:8000"
-SAMPLE_PDF_PATH = "sample_document.pdf"
+# Add current directory to path
+sys.path.append(str(Path(__file__).parent))
 
-def create_sample_pdf():
-    """Create a sample PDF for testing if it doesn't exist."""
-    try:
-        from reportlab.pdfgen import canvas
-        from reportlab.lib.pagesizes import letter
-        
-        c = canvas.Canvas(SAMPLE_PDF_PATH, pagesize=letter)
-        
-        # Page 1
-        c.drawString(100, 750, "SAMPLE FINANCIAL DOCUMENT")
-        c.drawString(100, 720, "Cross-Border Transaction Agreement")
-        c.drawString(100, 690, "")
-        c.drawString(100, 660, "This document outlines a transaction between entities")
-        c.drawString(100, 630, "located in the United States, European Union, and Singapore.")
-        c.drawString(100, 600, "The transaction involves the transfer of funds across")
-        c.drawString(100, 570, "multiple jurisdictions with varying regulatory requirements.")
-        c.drawString(100, 540, "")
-        c.drawString(100, 510, "Key Terms:")
-        c.drawString(100, 480, "- Amount: $2,500,000 USD")
-        c.drawString(100, 450, "- Parties: US Corp, EU Ltd, SG Holdings")
-        c.drawString(100, 420, "- Jurisdictions: New York, London, Singapore")
-        c.drawString(100, 390, "- Compliance: Subject to AML and sanctions screening")
-        c.drawString(100, 360, "")
-        c.drawString(100, 330, "Data Protection Notice:")
-        c.drawString(100, 300, "This document contains personal data subject to GDPR")
-        c.drawString(100, 270, "and PDPA regulations in the respective jurisdictions.")
-        
-        c.showPage()
-        
-        # Page 2
-        c.drawString(100, 750, "RISK ASSESSMENT")
-        c.drawString(100, 720, "")
-        c.drawString(100, 690, "The following risks have been identified:")
-        c.drawString(100, 660, "")
-        c.drawString(100, 630, "1. Cross-border regulatory compliance")
-        c.drawString(100, 600, "2. Anti-money laundering requirements")
-        c.drawString(100, 570, "3. Sanctions screening obligations")
-        c.drawString(100, 540, "4. Data protection compliance")
-        c.drawString(100, 510, "")
-        c.drawString(100, 480, "Recommendations:")
-        c.drawString(100, 450, "- Conduct enhanced due diligence")
-        c.drawString(100, 420, "- Implement ongoing monitoring")
-        c.drawString(100, 390, "- Regular compliance reviews")
-        
-        c.save()
-        print(f"✅ Created sample PDF: {SAMPLE_PDF_PATH}")
-        return True
-        
-    except ImportError:
-        print("❌ reportlab not installed. Install with: pip install reportlab")
-        return False
-    except Exception as e:
-        print(f"❌ Error creating sample PDF: {e}")
-        return False
+from smithery.smithery_mcp import (
+    analyze_compliance_tool,
+    save_report_tool,
+    get_reports_tool
+)
 
-def test_regular_analysis():
-    """Test the regular /analyze endpoint."""
-    print("\n🔍 Testing Regular Analysis...")
+async def demo_compliance_analysis():
+    """Demonstrate compliance analysis using MCP tools."""
     
-    if not os.path.exists(SAMPLE_PDF_PATH):
-        print("Creating sample PDF...")
-        if not create_sample_pdf():
-            return False
+    print("🧠 AI Compliance Copilot Demo")
+    print("=" * 50)
     
-    try:
-        with open(SAMPLE_PDF_PATH, 'rb') as f:
-            files = {'file': f}
-            response = requests.post(f"{BACKEND_URL}/analyze", files=files)
-        
-        if response.status_code == 200:
-            result = response.json()
-            print("✅ Analysis completed successfully!")
-            print(f"📊 Overall Risk: {result['overall_risk']:.1f}%")
-            print(f"🚩 Flags Found: {len(result['flags'])}")
-            print(f"📝 Summary: {result['summary'][:100]}...")
-            return True
-        else:
-            print(f"❌ Analysis failed: {response.status_code} - {response.text}")
-            return False
-            
-    except Exception as e:
-        print(f"❌ Error during analysis: {e}")
-        return False
-
-def test_streaming_analysis():
-    """Test the streaming /analyze_sse endpoint."""
-    print("\n🌊 Testing Streaming Analysis...")
-    
-    if not os.path.exists(SAMPLE_PDF_PATH):
-        print("Creating sample PDF...")
-        if not create_sample_pdf():
-            return False
-    
-    try:
-        with open(SAMPLE_PDF_PATH, 'rb') as f:
-            files = {'file': f}
-            response = requests.post(f"{BACKEND_URL}/analyze_sse", files=files, stream=True)
-        
-        if response.status_code == 200:
-            print("✅ Streaming analysis started!")
-            
-            for line in response.iter_lines():
-                if line:
-                    line_str = line.decode('utf-8')
-                    if line_str.startswith('data: '):
-                        try:
-                            data = json.loads(line_str[6:])
-                            stage = data.get('stage', 'unknown')
-                            message = data.get('message', '')
-                            
-                            if stage == 'ingest':
-                                print(f"📁 {message}")
-                            elif stage == 'extract':
-                                print(f"📄 {message}")
-                            elif stage == 'analyze':
-                                print(f"🤖 {message}")
-                            elif stage == 'done':
-                                print(f"✅ {message}")
-                                result = data.get('result', {})
-                                print(f"📊 Overall Risk: {result.get('overall_risk', 0):.1f}%")
-                                print(f"🚩 Flags Found: {len(result.get('flags', []))}")
-                                return True
-                            elif stage == 'error':
-                                print(f"❌ Error: {message}")
-                                return False
-                                
-                        except json.JSONDecodeError:
-                            continue
-            return True
-        else:
-            print(f"❌ Streaming analysis failed: {response.status_code} - {response.text}")
-            return False
-            
-    except Exception as e:
-        print(f"❌ Error during streaming analysis: {e}")
-        return False
-
-def test_reports_endpoint():
-    """Test the /reports endpoint."""
-    print("\n📋 Testing Reports Endpoint...")
-    
-    try:
-        response = requests.get(f"{BACKEND_URL}/reports?user_id=demo_user")
-        
-        if response.status_code == 200:
-            data = response.json()
-            reports = data.get('reports', [])
-            print(f"✅ Found {len(reports)} reports")
-            
-            if reports:
-                latest = reports[0]
-                print(f"📄 Latest: {latest.get('doc_name', 'Unknown')}")
-                print(f"📊 Risk: {latest.get('overall_risk', 0):.1f}%")
-                print(f"🚩 Flags: {len(latest.get('flags', []))}")
-            return True
-        else:
-            print(f"❌ Reports fetch failed: {response.status_code} - {response.text}")
-            return False
-            
-    except Exception as e:
-        print(f"❌ Error fetching reports: {e}")
-        return False
-
-def check_backend_health():
-    """Check if the backend is running."""
-    try:
-        response = requests.get(f"{BACKEND_URL}/")
-        if response.status_code == 200:
-            data = response.json()
-            print(f"✅ Backend is running: {data.get('message', 'Unknown')}")
-            return True
-        else:
-            print(f"❌ Backend health check failed: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"❌ Cannot connect to backend: {e}")
-        print("💡 Make sure to start the backend with: uvicorn app:app --reload --port 8000")
-        return False
-
-def main():
-    """Run the complete demo."""
-    print("🚀 AI Compliance Copilot Demo")
-    print("=" * 40)
-    
-    # Check backend health
-    if not check_backend_health():
+    # Check if we have a sample PDF
+    sample_pdf = "sample_compliance_doc.pdf"
+    if not os.path.exists(sample_pdf):
+        print(f"❌ Sample PDF not found: {sample_pdf}")
+        print("Please add a sample PDF file to test the compliance analysis.")
         return
     
-    # Test regular analysis
-    regular_success = test_regular_analysis()
+    print(f"📄 Analyzing sample document: {sample_pdf}")
     
-    # Test streaming analysis
-    streaming_success = test_streaming_analysis()
+    # Step 1: Analyze compliance
+    print("\n1️⃣ Analyzing compliance issues...")
+    analysis_result = await analyze_compliance_tool({
+        "file_path": sample_pdf,
+        "filename": sample_pdf
+    })
     
-    # Test reports endpoint
-    reports_success = test_reports_endpoint()
-    
-    # Summary
-    print("\n📊 Demo Summary")
-    print("=" * 20)
-    print(f"Regular Analysis: {'✅' if regular_success else '❌'}")
-    print(f"Streaming Analysis: {'✅' if streaming_success else '❌'}")
-    print(f"Reports Endpoint: {'✅' if reports_success else '❌'}")
-    
-    if all([regular_success, streaming_success, reports_success]):
-        print("\n🎉 All tests passed! The AI Compliance Copilot is working correctly.")
-        print("🌐 Visit http://localhost:3000 to use the web interface.")
+    if analysis_result and analysis_result[0].text:
+        result_data = json.loads(analysis_result[0].text)
+        if result_data.get("success"):
+            print("✅ Analysis completed successfully!")
+            print(f"📊 Overall Risk Score: {result_data['result']['overall_risk']:.1f}%")
+            print(f"🚨 Flags Found: {len(result_data['result']['flags'])}")
+            
+            # Display flags
+            for i, flag in enumerate(result_data['result']['flags'][:3], 1):
+                print(f"\n   {i}. {flag['title']} (Severity: {flag['severity']}/5)")
+                print(f"      Why it matters: {flag['why_it_matters'][:100]}...")
+        else:
+            print(f"❌ Analysis failed: {result_data.get('error', 'Unknown error')}")
     else:
-        print("\n⚠️  Some tests failed. Check the error messages above.")
+        print("❌ No analysis result received")
     
-    # Cleanup
-    if os.path.exists(SAMPLE_PDF_PATH):
-        os.remove(SAMPLE_PDF_PATH)
-        print(f"🧹 Cleaned up sample PDF")
+    # Step 2: Save report
+    print("\n2️⃣ Saving report to database...")
+    if result_data and result_data.get("success"):
+        save_result = await save_report_tool({
+            "user_id": "demo_user",
+            "doc_name": sample_pdf,
+            "summary": result_data['result']['summary'],
+            "overall_risk": result_data['result']['overall_risk'],
+            "flags": result_data['result']['flags']
+        })
+        
+        if save_result and save_result[0].text:
+            save_data = json.loads(save_result[0].text)
+            if save_data.get("success"):
+                print(f"✅ Report saved with ID: {save_data.get('report_id')}")
+            else:
+                print(f"❌ Failed to save report: {save_data.get('error')}")
+    
+    # Step 3: Retrieve reports
+    print("\n3️⃣ Retrieving user reports...")
+    reports_result = await get_reports_tool({"user_id": "demo_user"})
+    
+    if reports_result and reports_result[0].text:
+        reports_data = json.loads(reports_result[0].text)
+        if reports_data.get("success"):
+            print(f"✅ Found {reports_data['count']} reports for demo_user")
+            for report in reports_data['reports'][:3]:
+                print(f"   📄 {report['doc_name']} - Risk: {report['overall_risk']:.1f}%")
+        else:
+            print(f"❌ Failed to retrieve reports: {reports_data.get('error')}")
+    
+    print("\n🎉 Demo completed!")
+    print("\nTo test the full application:")
+    print("1. Run: ./start.sh")
+    print("2. Visit: http://localhost:3000")
+    print("3. Upload a PDF document for analysis")
+
+def create_sample_pdf():
+    """Create a sample PDF for testing (placeholder)."""
+    print("📝 Creating sample compliance document...")
+    
+    # This would create a sample PDF with compliance issues
+    # For now, we'll just create a placeholder
+    sample_content = """
+    SAMPLE COMPLIANCE DOCUMENT
+    
+    This is a sample document that would contain various compliance issues
+    such as missing customer due diligence information, inadequate data
+    protection measures, and cross-border transaction risks.
+    
+    The AI Compliance Copilot would analyze this document and identify
+    specific violations of MAS 626 AML/CFT and PDPA regulations.
+    """
+    
+    with open("sample_compliance_doc.txt", "w") as f:
+        f.write(sample_content)
+    
+    print("✅ Sample document created: sample_compliance_doc.txt")
+    print("Note: Convert this to PDF format for full testing")
 
 if __name__ == "__main__":
-    main()
+    # Check environment variables
+    required_vars = ["GROQ_API_KEY", "SUPABASE_URL", "SUPABASE_KEY"]
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    
+    if missing_vars:
+        print(f"❌ Missing environment variables: {', '.join(missing_vars)}")
+        print("Please set up your .env file with the required API keys.")
+        sys.exit(1)
+    
+    # Create sample document if it doesn't exist
+    if not os.path.exists("sample_compliance_doc.pdf"):
+        create_sample_pdf()
+    
+    # Run the demo
+    asyncio.run(demo_compliance_analysis())

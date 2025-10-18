@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ai-compliance-copilot": {
+      "command": "python",
+      "args": ["smithery_mcp.py"],
+      "env": {
+        "GROQ_API_KEY": "${GROQ_API_KEY}",
+        "SUPABASE_URL": "${SUPABASE_URL}",
+        "SUPABASE_KEY": "${SUPABASE_KEY}"
+      }
+    }
+  }
+}
