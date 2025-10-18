@@ -13,6 +13,7 @@ from groq import Groq
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import logging
+from compliance_rules import generate_compliance_prompt
 
 # Load environment variables
 load_dotenv()
@@ -111,42 +112,8 @@ def analyze_chunks(text: str, filename: str) -> AnalysisResult:
     if len(text) > 50000:
         text = text[:50000] + "\n\n[Text truncated for analysis...]"
     
-    prompt = f"""
-Analyze the following financial/legal document for compliance issues. Return a JSON response with this exact structure:
-
-{{
-  "summary": "Executive summary of the document and key compliance findings",
-  "overall_risk": 75.5,
-  "flags": [
-    {{
-      "title": "Cross-Border Transaction Risk",
-      "severity": 4,
-      "why_it_matters": "This transaction involves multiple jurisdictions with different regulatory requirements",
-      "recommendation": "Conduct thorough due diligence on all parties and ensure compliance with all applicable regulations",
-      "evidence": [
-        {{
-          "page": 1,
-          "quote": "Transaction involves entities in US, EU, and Singapore..."
-        }}
-      ]
-    }}
-  ]
-}}
-
-Focus on these compliance areas:
-- Anti-Money Laundering (AML)
-- Cross-border transactions
-- Sanctions compliance
-- Data protection (PDPA/GDPR)
-- Financial regulations
-- Risk management
-
-Document: {filename}
-Content:
-{text}
-
-Return only valid JSON, no additional text.
-"""
+    # Generate comprehensive compliance prompt using our rules
+    prompt = generate_compliance_prompt(text, filename)
 
     try:
         response = groq_client.chat.completions.create(

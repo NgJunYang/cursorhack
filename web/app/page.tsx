@@ -163,6 +163,36 @@ export default function Home() {
             >
               Groq
             </a>
+            <span>•</span>
+            <a
+              href="https://supabase.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-600 hover:text-green-700 font-medium transition-colors"
+            >
+              Supabase
+            </a>
+            <span>•</span>
+            <a
+              href="https://smithery.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-600 hover:text-purple-700 font-medium transition-colors"
+            >
+              Smithery MCP
+            </a>
+            <span>•</span>
+            <a
+              href="https://cursor.sh"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            >
+              Cursor
+            </a>
+          </div>
+          <div className="mt-2 text-sm text-gray-400">
+            Built for Cursor Hackathon Singapore 2025
           </div>
         </footer>
       </main>

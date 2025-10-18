@@ -1,12 +1,17 @@
-# AI Compliance Copilot
+# 🧠 AI Compliance Copilot (Groq + Supabase + Smithery)
 
-A production-ready AI-powered compliance analysis tool that uses Groq's ultra-fast Llama 3 API to analyze financial and legal PDFs for compliance issues.
+**Team: [Your Team Name] | Cursor Hackathon Singapore 2025**
+
+A production-ready AI-powered compliance analysis tool that uses Groq's ultra-fast Llama 3 API to analyze financial and legal PDFs for MAS 626 AML/CFT, PDPA, and cross-border compliance issues. Features MCP integration via Smithery for multi-agent AI workflows.
 
 ## 🚀 Features
 
 - **Ultra-Fast Analysis**: Powered by Groq's lightning-fast Llama 3-70B model
 - **Live Streaming**: Real-time progress updates with Server-Sent Events (SSE)
-- **Comprehensive Detection**: Identifies AML, sanctions, GDPR, cross-border risks, and more
+- **MAS 626 AML/CFT Compliance**: Comprehensive detection of Singapore AML/CFT violations
+- **PDPA Compliance**: Personal Data Protection Act compliance analysis
+- **Cross-Border Transaction Monitoring**: Enhanced due diligence for international transactions
+- **MCP Integration**: Multi-agent workflows via Smithery MCP server
 - **Structured Reports**: Detailed findings with severity scores, evidence, and recommendations
 - **Markdown Export**: Download analysis reports in Markdown format
 - **Report History**: Store and access all compliance reports via Supabase
@@ -20,7 +25,24 @@ A production-ready AI-powered compliance analysis tool that uses Groq's ultra-fa
 - **Database**: Supabase (PostgreSQL)
 - **Frontend**: Next.js 14 + Tailwind CSS
 - **PDF Processing**: pdfplumber + PyMuPDF
+- **MCP Integration**: Smithery MCP Server
+- **Multi-Agent AI**: ReaderAgent, ComplianceAgent, ReporterAgent
 - **Export**: Markdown generation
+
+## 🧩 Architecture
+
+### Multi-Agent MCP Integration
+The system uses Smithery MCP to enable multi-agent AI workflows:
+
+- **ReaderAgent**: Extracts and processes text from PDF documents
+- **ComplianceAgent**: Evaluates documents against MAS 626, PDPA, and cross-border regulations
+- **ReporterAgent**: Generates structured compliance reports with evidence and recommendations
+
+### MCP Tools Available
+- `analyze_compliance`: Analyze PDF documents for compliance issues
+- `save_report`: Store compliance reports in Supabase
+- `get_reports`: Retrieve user's compliance report history
+- `get_report`: Get specific report by ID
 
 ## 📋 Prerequisites
 
@@ -28,6 +50,7 @@ A production-ready AI-powered compliance analysis tool that uses Groq's ultra-fa
 - Node.js 18+
 - Groq API key
 - Supabase account
+- Smithery MCP client (for multi-agent workflows)
 
 ## 🚀 Quick Start
 
@@ -84,13 +107,54 @@ npm install
 uvicorn app:app --reload --port 8000
 ```
 
-**Frontend (Terminal 2):**
+**MCP Server (Terminal 2):**
+```bash
+cd smithery
+python smithery_mcp.py
+```
+
+**Frontend (Terminal 3):**
 ```bash
 cd web
 npm run dev
 ```
 
 Visit `http://localhost:3000` to access the application.
+
+### 6. MCP Integration (Optional)
+
+To use the multi-agent MCP features, register the server with Smithery:
+
+```bash
+# Add to your Smithery configuration
+smithery add-server smithery/smithery.json
+```
+
+## 🏛️ Compliance Rules
+
+### MAS 626 AML/CFT Rules
+- Customer Due Diligence (CDD) requirements
+- Enhanced Due Diligence (EDD) for high-risk customers
+- Suspicious transaction reporting obligations
+- Record keeping requirements (5 years minimum)
+- Risk assessment and management frameworks
+- Politically Exposed Persons (PEPs) screening
+- Sanctions and watchlist screening
+
+### PDPA Rules
+- Consent management and withdrawal mechanisms
+- Data collection purpose limitation
+- Data accuracy and completeness requirements
+- Data retention and disposal policies
+- Cross-border data transfer restrictions
+- Data breach notification obligations (72 hours)
+- Individual rights (access, correction, withdrawal)
+
+### Cross-Border Transaction Rules
+- Transaction monitoring and reporting requirements
+- Enhanced due diligence for international transactions
+- Sanctions compliance across jurisdictions
+- Regulatory reporting obligations
 
 ## 📖 API Endpoints
 
@@ -200,18 +264,58 @@ PORT=8000
 3. Get your project URL and anon key from Settings > API
 4. Update your `.env` file
 
+## 🧪 Testing
+
+### Run MCP Tests
+```bash
+python test_mcp.py
+```
+
+### Run Demo
+```bash
+python demo.py
+```
+
+### Run Full Test Suite
+```bash
+pytest test_app.py -v
+```
+
 ## 🚀 Deployment
 
-### Backend (FastAPI)
-
+### Quick Start (All Services)
 ```bash
-# Production with Gunicorn
+./start.sh
+```
+
+### Individual Services
+
+**Backend (FastAPI):**
+```bash
+uvicorn app:app --reload --port 8000
+```
+
+**MCP Server:**
+```bash
+cd smithery
+python smithery_mcp.py
+```
+
+**Frontend (Next.js):**
+```bash
+cd web
+npm run dev
+```
+
+### Production Deployment
+
+**Backend with Gunicorn:**
+```bash
 pip install gunicorn
 gunicorn app:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
-### Frontend (Next.js)
-
+**Frontend Build:**
 ```bash
 cd web
 npm run build
@@ -244,13 +348,41 @@ npm start
 
 This project is licensed under the MIT License.
 
+## 🏆 Hackathon Story
+
+**AI Compliance Copilot** was built for the Cursor Hackathon Singapore 2025 to address the critical need for automated compliance analysis in Singapore's financial sector. With the increasing complexity of MAS 626 AML/CFT and PDPA regulations, financial institutions need intelligent tools to identify compliance risks quickly and accurately.
+
+### Problem Statement
+- Manual compliance review is time-consuming and error-prone
+- MAS 626 AML/CFT requirements are complex and constantly evolving
+- PDPA compliance requires careful data handling and privacy protection
+- Cross-border transactions need enhanced due diligence
+- Traditional rule-based systems miss nuanced compliance issues
+
+### Our Solution
+- **AI-Powered Analysis**: Uses Groq's ultra-fast Llama 3 model for intelligent compliance detection
+- **Multi-Agent Architecture**: Smithery MCP enables specialized AI agents for different compliance tasks
+- **Real-time Processing**: Live streaming analysis with progress updates
+- **Comprehensive Coverage**: MAS 626, PDPA, cross-border, and sanctions compliance
+- **Actionable Insights**: Detailed evidence, recommendations, and risk scoring
+
+### Technical Innovation
+- **MCP Integration**: First compliance tool to use Smithery MCP for multi-agent workflows
+- **Streaming Analysis**: Real-time progress updates using Server-Sent Events
+- **Smart Rule Engine**: Dynamic compliance rule matching based on document content
+- **Modern Stack**: FastAPI + Next.js + Supabase + Groq for optimal performance
+
 ## 🙏 Acknowledgments
 
-- **Groq** for ultra-fast AI inference
+- **Groq** for ultra-fast AI inference and Llama 3 model
 - **Supabase** for database and backend services
+- **Smithery** for MCP integration and multi-agent AI workflows
+- **Cursor** for the amazing AI-powered development environment
 - **Next.js** for the modern React framework
 - **FastAPI** for the high-performance Python API
 
 ---
 
-**Powered by Groq** - Building the future of AI inference 🚀
+**Built for Cursor Hackathon Singapore 2025** 🚀
+
+*Empowering financial institutions with AI-driven compliance analysis*
